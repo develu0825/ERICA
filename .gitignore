@@ -1,0 +1,8 @@
+# API 키 (절대 커밋 금지)
+src/config.js
+
+# OS / editor
+.DS_Store
+Thumbs.db
+node_modules/
+*.log
