@@ -1,6 +1,7 @@
 // sidepanel.js — 패널 UI 로직
 import { guide } from "./ai.js";
 import { getSettings, saveSettings, hasApiKey } from "./settings.js";
+import { getHistory, addHistory, clearHistory } from "./history.js";
 
 const $ = (id) => document.getElementById(id);
 const statusEl = $("status");
@@ -180,6 +181,14 @@ async function runGuide({ goal, lang, auto = false }) {
     lastRun = { goal, lang };
     lastGuidedUrl = page.url || tab.url || "";
 
+    // 안내 기록 저장(다시보기용)
+    if (out.summary || (out.steps && out.steps.length)) {
+      await addHistory({
+        ts: Date.now(), url: lastGuidedUrl, title: page.title || "", goal, lang,
+        summary: out.summary, steps: out.steps, nextLink: out.nextLink, warnings: out.warnings,
+      });
+    }
+
     // 추천 링크가 있으면 페이지에서 바로 초록색으로 표시(루프 흐름 매끄럽게)
     if (out.nextLink) {
       const r = await sendToContent(tab.id, {
@@ -228,6 +237,53 @@ $("terms-toggle").addEventListener("click", async () => {
     console.error(e);
     setStatus("용어 표시 중 오류: " + e.message, true);
   }
+});
+
+// ---------- 안내 기록 다시보기 ----------
+function fmtTime(ts) {
+  try {
+    const d = new Date(ts);
+    const p = (n) => String(n).padStart(2, "0");
+    return `${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  } catch { return ""; }
+}
+
+async function renderHistoryList() {
+  const list = await getHistory();
+  const box = $("history-list");
+  box.innerHTML = "";
+  if (!list.length) {
+    box.innerHTML = `<div class="wg-history-empty">아직 저장된 안내가 없어요.</div>`;
+    return;
+  }
+  list.forEach((item) => {
+    const el = document.createElement("button");
+    el.className = "wg-history-item";
+    el.innerHTML = `<div class="hi-goal"></div>
+      <div class="hi-meta"><span class="hi-title"></span><span class="hi-time">${fmtTime(item.ts)}</span></div>`;
+    el.querySelector(".hi-goal").textContent = item.goal || "(목적 없음)";
+    el.querySelector(".hi-title").textContent = item.title || item.url || "";
+    el.addEventListener("click", async () => {
+      const tab = await getActiveTab();
+      render(item, tab?.id);
+      setStatus("지난 안내를 다시 불러왔어요.");
+    });
+    box.appendChild(el);
+  });
+}
+
+$("history-toggle").addEventListener("click", async () => {
+  const sec = $("history");
+  const open = sec.hidden;
+  sec.hidden = !open;
+  $("history-toggle").classList.toggle("on", open);
+  if (open) await renderHistoryList();
+});
+
+$("history-clear").addEventListener("click", async () => {
+  await clearHistory();
+  await renderHistoryList();
+  setStatus("기록을 모두 지웠어요.");
 });
 
 // ---------- 루프: 같은 탭이 새 페이지로 이동하면 자동으로 다시 안내 ----------

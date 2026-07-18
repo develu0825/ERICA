@@ -68,6 +68,16 @@
     </label>
 
     <button id="terms-toggle" class="wg-btn wg-btn-ghost">🔤 어려운 말 쉽게 보기</button>
+    <button id="history-toggle" class="wg-btn wg-btn-ghost">📋 지난 안내 기록</button>
+  </section>
+
+  <!-- 안내 기록 목록 (기본 숨김) -->
+  <section id="history" class="wg-history" hidden>
+    <div class="wg-history-head">
+      <span>지난 안내</span>
+      <button id="history-clear" class="wg-clear">전체 삭제</button>
+    </div>
+    <div id="history-list" class="wg-history-list"></div>
   </section>
 
   <section id="result" class="wg-result" hidden></section>
