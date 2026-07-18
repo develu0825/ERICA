@@ -136,9 +136,16 @@ function render({ summary, steps, nextLink, warnings }, tabId) {
   }
 }
 
-$("run").addEventListener("click", async () => {
-  const goal = $("goal").value.trim();
-  const lang = $("lang").value;
+// ---------- 안내 실행 (버튼/자동 공용) ----------
+// 마지막 안내에 쓴 목적·언어와, 이미 안내한 URL을 기억해 루프에 활용한다.
+let lastRun = null;        // { goal, lang }
+let lastGuidedUrl = "";    // 중복 자동 안내 방지용
+let busy = false;          // 동시 실행 방지
+
+const autoGuideOn = () => $("autoGuide").checked;
+
+async function runGuide({ goal, lang, auto = false }) {
+  if (busy) return;
   if (!goal) return setStatus("하고 싶은 일을 입력해 주세요.", true);
 
   if (!(await hasApiKey())) {
@@ -148,9 +155,10 @@ $("run").addEventListener("click", async () => {
   }
 
   const btn = $("run");
+  busy = true;
   btn.disabled = true;
-  setStatus("페이지를 읽는 중…");
-  resultEl.hidden = true;
+  setStatus(auto ? "페이지가 바뀌었어요 · 다시 읽는 중…" : "페이지를 읽는 중…");
+  if (!auto) resultEl.hidden = true;
 
   try {
     const tab = await getActiveTab();
@@ -169,11 +177,45 @@ $("run").addEventListener("click", async () => {
     });
 
     render(out, tab.id);
-    setStatus("");
+    lastRun = { goal, lang };
+    lastGuidedUrl = page.url || tab.url || "";
+
+    // 추천 링크가 있으면 페이지에서 바로 초록색으로 표시(루프 흐름 매끄럽게)
+    if (out.nextLink) {
+      const r = await sendToContent(tab.id, {
+        type: "WG_HIGHLIGHT", href: out.nextLink.href, text: out.nextLink.text,
+      });
+      setStatus(r?.ok
+        ? "다음에 누를 곳을 페이지에 표시했어요 ✓"
+        : (auto ? "새 페이지를 자동으로 안내했어요 ✓" : ""));
+    } else {
+      setStatus(auto ? "새 페이지를 자동으로 안내했어요 ✓" : "");
+    }
   } catch (e) {
     console.error(e);
     setStatus("오류: " + e.message + "  (⚙ 설정의 API 키/모델을 확인하세요)", true);
   } finally {
+    busy = false;
     btn.disabled = false;
   }
+}
+
+$("run").addEventListener("click", () =>
+  runGuide({ goal: $("goal").value.trim(), lang: $("lang").value })
+);
+
+// ---------- 루프: 같은 탭이 새 페이지로 이동하면 자동으로 다시 안내 ----------
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (!autoGuideOn() || !lastRun || busy) return;
+  if (changeInfo.status !== "complete") return;          // 로딩 완료 시점만
+  if (!tab?.active) return;                              // 백그라운드 탭 무시
+  const url = tab.url || "";
+  if (!url || url === lastGuidedUrl) return;             // 같은 페이지 재안내 방지
+  if (/^(chrome|edge|about|chrome-extension):/i.test(url)) return; // 내부 페이지 무시
+
+  const active = await getActiveTab();
+  if (!active || active.id !== tabId) return;            // 현재 보고 있는 탭만
+
+  lastGuidedUrl = url; // 중복 트리거 즉시 차단
+  runGuide({ goal: lastRun.goal, lang: lastRun.lang, auto: true });
 });

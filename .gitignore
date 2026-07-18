@@ -6,3 +6,6 @@ src/config.js
 Thumbs.db
 node_modules/
 *.log
+
+# 도구 상태 (커밋 금지)
+.omc/
