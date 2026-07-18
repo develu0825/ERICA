@@ -75,7 +75,7 @@ async function sendToContent(tabId, message) {
   try {
     return await chrome.tabs.sendMessage(tabId, message);
   } catch {
-    await chrome.scripting.executeScript({ target: { tabId }, files: ["src/content.js"] });
+    await chrome.scripting.executeScript({ target: { tabId }, files: ["src/lib/classify.js", "src/content.js"] });
     return await chrome.tabs.sendMessage(tabId, message);
   }
 }

@@ -1,0 +1,10 @@
+{
+  "name": "web-guide-extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "다문화 웹 길잡이 크롬 확장 — 순수 로직 단위 테스트",
+  "scripts": {
+    "test": "node --test"
+  }
+}

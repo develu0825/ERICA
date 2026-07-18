@@ -21,7 +21,7 @@ ${lang} 언어로, 쉬운 말로, 딱 한 걸음만 안내하세요.
   "warnings": ["${lang}로 무시해야 할 광고/의심 요소 설명"]
 }`;
 
-function buildUserPrompt({ goal, pageTitle, pageText, links }) {
+export function buildUserPrompt({ goal, pageTitle, pageText, links }) {
   const linkList = links
     .map((l, i) => `${i + 1}. [${l.label}] "${l.text}" -> ${l.href}`)
     .join("\n");
@@ -36,7 +36,7 @@ ${pageText}
 ${linkList}`;
 }
 
-function safeParseJson(text) {
+export function safeParseJson(text) {
   // 모델이 코드펜스로 감쌀 때 대비
   const cleaned = text.replace(/```json/gi, "").replace(/```/g, "").trim();
   const start = cleaned.indexOf("{");

@@ -1,9 +1,8 @@
 // content.js — 웹페이지 안에서 실행되는 스크립트
 // 역할: (1) 페이지 본문·링크 추출  (2) 광고/피싱 휴리스틱 분류  (3) 추천 링크 하이라이트
 
-const AD_KEYWORDS = ["광고", "AD", "무료", "지금 클릭", "상담신청", "무료상담", "이벤트", "당첨", "쿠폰"];
-const OFFICIAL_HOSTS = [".gov.kr", ".go.kr", ".korea.kr"];
-
+// 링크 분류는 공유 순수 모듈(src/lib/classify.js)에 위임한다.
+// classify.js가 content_scripts 배열에서 먼저 로드되어 globalThis.WG에 함수를 붙인다.
 function classifyLink(a) {
   const text = (a.innerText || a.textContent || "").trim();
   let href = "";
@@ -12,14 +11,10 @@ function classifyLink(a) {
   let host = "";
   try { host = new URL(href).hostname; } catch {}
 
-  const sameSite = host && host.endsWith(location.hostname.split(".").slice(-2).join("."));
-  const isOfficial = OFFICIAL_HOSTS.some((h) => host.endsWith(h));
-  const looksAd = AD_KEYWORDS.some((k) => text.includes(k));
-
-  let label = "normal";
-  if (looksAd) label = "ad";
-  else if (isOfficial) label = "official";
-  else if (host && !sameSite) label = "suspect"; // 외부 도메인
+  const labelFn = self.WG && self.WG.classifyLabel;
+  const label = labelFn
+    ? labelFn({ text, href, currentHostname: location.hostname })
+    : "normal";
 
   return { text, href, host, label };
 }

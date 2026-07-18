@@ -18,7 +18,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content.js"],
+      "js": ["src/lib/classify.js", "src/content.js"],
       "run_at": "document_idle"
     }
   ],
