@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "다문화 웹 길잡이 (Web Guide)",
+  "version": "0.1.0",
+  "description": "한국어 웹사이트에서 목적을 입력하면 다음에 눌러야 할 곳을 모국어로 안내하고 광고·피싱을 걸러주는 AI 길잡이.",
+  "permissions": ["activeTab", "scripting", "sidePanel", "storage", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "웹 길잡이 열기 (Alt+Q)"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "commands": {
+    "open-guide": {
+      "suggested_key": { "default": "Alt+Q" },
+      "description": "웹 길잡이 패널 열기"
+    }
+  }
+}

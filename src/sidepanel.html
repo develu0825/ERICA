@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>웹 길잡이</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <header class="wg-head">
+    <div class="wg-head-row">
+      <div class="wg-logo">🧭 웹 길잡이</div>
+      <button id="settings-toggle" class="wg-gear" title="설정">⚙</button>
+    </div>
+    <div class="wg-sub">목적을 말하면, 다음 한 걸음을 안내해요</div>
+  </header>
+
+  <!-- 첫 실행: API 키 안내 배너 -->
+  <div id="key-banner" class="wg-banner" hidden>
+    시작하려면 <b>AI API 키</b>가 필요해요. 아래 설정에서 키를 넣어 주세요.
+  </div>
+
+  <!-- 설정 패널 (기본 숨김) -->
+  <section id="settings" class="wg-settings" hidden>
+    <label class="wg-label">AI 제공자 / Provider</label>
+    <select id="provider" class="wg-select">
+      <option value="gemini">Google Gemini (무료 할당량)</option>
+      <option value="openai">OpenAI</option>
+    </select>
+
+    <div id="gemini-fields">
+      <label class="wg-label">Gemini API 키</label>
+      <input id="geminiApiKey" class="wg-input" type="password" placeholder="AIza… (Google AI Studio에서 발급)" autocomplete="off" />
+      <label class="wg-label">Gemini 모델</label>
+      <input id="geminiModel" class="wg-input" type="text" placeholder="gemini-2.0-flash" />
+      <a class="wg-help" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">→ Gemini 키 발급받기</a>
+    </div>
+
+    <div id="openai-fields" hidden>
+      <label class="wg-label">OpenAI API 키</label>
+      <input id="openaiApiKey" class="wg-input" type="password" placeholder="sk-…" autocomplete="off" />
+      <label class="wg-label">OpenAI 모델</label>
+      <input id="openaiModel" class="wg-input" type="text" placeholder="gpt-4o-mini" />
+    </div>
+
+    <button id="save-settings" class="wg-btn wg-btn-sm">설정 저장</button>
+    <div id="settings-status" class="wg-status"></div>
+  </section>
+
+  <section class="wg-form">
+    <label class="wg-label">언어 / Language</label>
+    <select id="lang" class="wg-select">
+      <option value="베트남어">🇻🇳 Tiếng Việt (베트남어)</option>
+      <option value="영어">🇺🇸 English (영어)</option>
+      <option value="중국어">🇨🇳 中文 (중국어)</option>
+      <option value="한국어">🇰🇷 한국어</option>
+    </select>
+
+    <label class="wg-label">무엇을 하고 싶으세요?</label>
+    <textarea id="goal" class="wg-textarea" rows="3"
+      placeholder="예: 자녀 학비 지원을 신청하고 싶어요"></textarea>
+
+    <button id="run" class="wg-btn">안내받기</button>
+  </section>
+
+  <section id="result" class="wg-result" hidden></section>
+  <div id="status" class="wg-status"></div>
+
+  <script type="module" src="sidepanel.js"></script>
+</body>
+</html>
