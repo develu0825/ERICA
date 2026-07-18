@@ -75,7 +75,7 @@ async function sendToContent(tabId, message) {
   try {
     return await chrome.tabs.sendMessage(tabId, message);
   } catch {
-    await chrome.scripting.executeScript({ target: { tabId }, files: ["src/lib/classify.js", "src/content.js"] });
+    await chrome.scripting.executeScript({ target: { tabId }, files: ["src/lib/classify.js", "src/lib/terms.js", "src/content.js"] });
     return await chrome.tabs.sendMessage(tabId, message);
   }
 }
@@ -204,6 +204,32 @@ $("run").addEventListener("click", () =>
   runGuide({ goal: $("goal").value.trim(), lang: $("lang").value })
 );
 
+// ---------- 행정용어 쉬운말 툴팁 토글 ----------
+let termsOn = false;
+$("terms-toggle").addEventListener("click", async () => {
+  const tab = await getActiveTab();
+  if (!tab?.id) return setStatus("활성 탭을 찾을 수 없어요.", true);
+  const btn = $("terms-toggle");
+  try {
+    if (!termsOn) {
+      const r = await sendToContent(tab.id, { type: "WG_TERMS_ON" });
+      termsOn = true;
+      btn.classList.add("on");
+      btn.textContent = "🔤 쉬운 말 끄기";
+      setStatus(r?.count ? `어려운 말 ${r.count}개에 설명을 달았어요 ✓` : "이 페이지에서는 어려운 말을 못 찾았어요.");
+    } else {
+      await sendToContent(tab.id, { type: "WG_TERMS_OFF" });
+      termsOn = false;
+      btn.classList.remove("on");
+      btn.textContent = "🔤 어려운 말 쉽게 보기";
+      setStatus("");
+    }
+  } catch (e) {
+    console.error(e);
+    setStatus("용어 표시 중 오류: " + e.message, true);
+  }
+});
+
 // ---------- 루프: 같은 탭이 새 페이지로 이동하면 자동으로 다시 안내 ----------
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (!autoGuideOn() || !lastRun || busy) return;
@@ -217,5 +243,14 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (!active || active.id !== tabId) return;            // 현재 보고 있는 탭만
 
   lastGuidedUrl = url; // 중복 트리거 즉시 차단
+
+  // 새 페이지에는 용어 주석이 없으므로 토글 UI를 원상복귀
+  if (termsOn) {
+    termsOn = false;
+    const tb = $("terms-toggle");
+    tb.classList.remove("on");
+    tb.textContent = "🔤 어려운 말 쉽게 보기";
+  }
+
   runGuide({ goal: lastRun.goal, lang: lastRun.lang, auto: true });
 });

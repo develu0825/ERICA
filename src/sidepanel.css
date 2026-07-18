@@ -58,6 +58,11 @@ body{ font-family:'Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
 .wg-warn li{ font-size:12px; color:#7a4322; padding:3px 0 3px 18px; position:relative; line-height:1.5; }
 .wg-warn li:before{ content:"⚠"; position:absolute; left:0; }
 
+.wg-btn-ghost{ margin-top:10px; background:#fff; color:var(--brand-d);
+  border:1px solid var(--brand); }
+.wg-btn-ghost:hover{ background:var(--brand-l); }
+.wg-btn-ghost.on{ background:var(--brand); color:#fff; }
+
 .wg-check{ display:flex; align-items:center; gap:7px; margin-top:11px;
   font-size:12px; color:var(--muted); cursor:pointer; user-select:none; }
 .wg-check input{ width:15px; height:15px; accent-color:var(--brand); cursor:pointer; }
